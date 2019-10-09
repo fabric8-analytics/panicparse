@@ -1,4 +1,4 @@
-module github.com/maruel/panicparse
+module github.com/rootavish/panicparse
 
 go 1.11
 
