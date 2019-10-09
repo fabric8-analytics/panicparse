@@ -27,7 +27,7 @@ type Context struct {
 	// Goroutines is the Goroutines found.
 	//
 	// They are in the order that they were printed.
-	Goroutines []*Goroutine
+	Goroutines []*Goroutine `json:"Goroutines"`
 
 	// GOROOT is the GOROOT as detected in the traceback, not the on the host.
 	//
@@ -35,7 +35,7 @@ type Context struct {
 	// contains only non-stdlib source references.
 	//
 	// Empty is guesspaths was false.
-	GOROOT string
+	GOROOT string `json:"GOROOT"`
 	// GOPATHs is the GOPATH as detected in the traceback, with the value being
 	// the corresponding path mapped to the host.
 	//
@@ -44,10 +44,10 @@ type Context struct {
 	// the map.
 	//
 	// Nil is guesspaths was false.
-	GOPATHs map[string]string
+	GOPATHs map[string]string `json:"GOPATHs"`
 
-	localgoroot  string
-	localgopaths []string
+	localgoroot  string `json:"Localgoroot"`
+	localgopaths []string `json:"Localgopaths"`
 }
 
 // ParseDump processes the output from runtime.Stack().

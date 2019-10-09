@@ -5,6 +5,7 @@
 package stack
 
 import (
+	"fmt"
 	"sort"
 )
 
@@ -28,6 +29,7 @@ const (
 // The buckets are ordered in library provided order of relevancy. You can
 // reorder at your chosing.
 func Aggregate(goroutines []*Goroutine, similar Similarity) []*Bucket {
+	fmt.Printf("Inside aggregate, goroutine count: %d\n", len(goroutines))
 	type count struct {
 		ids   []int
 		first bool
