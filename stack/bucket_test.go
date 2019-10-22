@@ -175,3 +175,99 @@ func compareBuckets(t *testing.T, expected, actual []*Bucket) {
 		}
 	}
 }
+
+func Test_isSubset(t *testing.T) {
+	type args struct {
+		first  *callstack
+		second *callstack
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Test if first is subset of second.",
+			args: args{
+				first: &callstack{"a", "aa", "aaa"},
+				second: &callstack{"a", "aa", "aaa", "aaaa"},
+			},
+			want: true,
+		},
+		{
+			name: "Test equal.",
+			args: args{
+				first: &callstack{"a", "aa", "aaa"},
+				second: &callstack{"a", "aa", "aaa"},
+			},
+			want: true,
+		},
+		{
+			name: "Test if not a subset.",
+			args: args{
+				first: &callstack{"a"},
+				second: &callstack{"aa", "aaa"},
+			},
+			want: false,
+		},
+
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isSubset(tt.args.first, tt.args.second); got != tt.want {
+				t.Errorf("isSubset() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkSubset(t *testing.T) {
+	type args struct {
+		fullStacks []*callstack
+		curstack   callstack
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*callstack
+	}{
+		{
+			name: "Test if same stack",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+				curstack:callstack{"a", "b"},
+			},
+			want: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+		},
+		{
+			name: "Test if incoming stack is already present in the fullstacks",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f", "e"}},
+				curstack:callstack{"d", "f"},
+			},
+			want: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f", "e"}},
+		},
+		{
+			name: "Test if incoming stack's subsets are present in the fullstacks",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+				curstack:callstack{"a", "b", "c"},
+			},
+			want: []*callstack{&callstack{"d", "f"}, &callstack{"a", "b", "c"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := checkSubset(tt.args.fullStacks, tt.args.curstack)
+			if len(got) != len(tt.want) {
+				t.Errorf("Got: %v, Want: %v\n", got, tt.want)
+			}
+			for idx, result := range got {
+				if !reflect.DeepEqual(*result, *tt.want[idx]) {
+					t.Errorf("checkSubset() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
