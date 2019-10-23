@@ -82,8 +82,13 @@ func AggregateSubsets(goroutines []*Goroutine, allStacks Callstacks) Callstacks 
 	if allStacks == nil {
 		allStacks = make(Callstacks, 0)
 	}
+	var stacks []*callstack
 	for _, routine := range goroutines {
 		stacks = append(stacks, flattenStack(routine.Stack.Calls))
+	}
+	for _, newstack := range stacks {
+		// Modify allstacks by adding/removing the necessary stack.
+		allStacks = checkSubset(allStacks, *newstack)
 	}
 	return allStacks
 }

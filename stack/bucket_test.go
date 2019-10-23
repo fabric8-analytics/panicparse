@@ -271,3 +271,163 @@ func Test_checkSubset(t *testing.T) {
 		})
 	}
 }
+
+func TestAggregateSubsets(t *testing.T) {
+	type args struct {
+		goroutines []*Goroutine
+		allStacks  Callstacks
+	}
+	tests := []struct {
+		name string
+		args args
+		want Callstacks
+	}{
+		{
+			name: "Test empty set queue initialization.",
+			args: args{
+				goroutines: []*Goroutine{
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "main.main",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "init.init",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+				},
+				allStacks: nil,
+			},
+			want: Callstacks{
+				&callstack{
+					"main.main",
+					"init.init",
+				},
+			},
+		},
+		{
+			name: "Test multiple goroutines with different functions.",
+			args: args{
+				goroutines: []*Goroutine{
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "main.main",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "init.init",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "a.b",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "c.d",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+				},
+				allStacks: nil,
+			},
+			want: Callstacks{
+				&callstack{
+					"main.main",
+					"init.init",
+				},
+				&callstack{
+					"a.b",
+					"c.d",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AggregateSubsets(tt.args.goroutines, tt.args.allStacks); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AggregateSubsets() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
