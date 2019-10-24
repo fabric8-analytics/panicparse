@@ -5,7 +5,6 @@
 package stack
 
 import (
-	"fmt"
 	"reflect"
 	"sort"
 )
@@ -34,7 +33,6 @@ const (
 // The buckets are ordered in library provided order of relevancy. You can
 // reorder at your chosing.
 func Aggregate(goroutines []*Goroutine, similar Similarity) []*Bucket {
-	fmt.Printf("Inside aggregate, goroutine count: %d\n", len(goroutines))
 	type count struct {
 		ids   []int
 		first bool
@@ -101,10 +99,10 @@ func checkSubset(fullStacks []*callstack, curstack callstack) []*callstack {
 		if reflect.DeepEqual(*st, curstack) {
 			subset = true
 			break
-		} else if isSubset(&curstack, st) {
+		} else if isOrderedSubset(&curstack, st) {
 			subset = true
 			break
-		} else if isSubset(st, &curstack) {
+		} else if isOrderedSubset(st, &curstack) {
 			// The current stack is bigger, keep that instead, remove this one.
 			removeIndexes[i] = true
 		}
@@ -123,7 +121,10 @@ func checkSubset(fullStacks []*callstack, curstack callstack) []*callstack {
 }
 
 // Returns true if first is a subset of second.
-func isSubset(first, second *callstack) bool {
+func isOrderedSubset(first, second *callstack) bool {
+	if len(*first) > len(*second) {
+		return false
+	}
 	set := make(map[string]int)
 	for _, value := range *second {
 		set[value] += 1
@@ -138,7 +139,15 @@ func isSubset(first, second *callstack) bool {
 			set[value] = count - 1
 		}
 	}
+	return checkSequence(*first, *second)
+}
 
+func checkSequence(a, b []string) bool {
+	for i:=0; i < len(a); i++ {
+		if a[i] != b[i] {
+			return false
+		}
+	}
 	return true
 }
 

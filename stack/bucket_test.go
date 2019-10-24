@@ -176,7 +176,7 @@ func compareBuckets(t *testing.T, expected, actual []*Bucket) {
 	}
 }
 
-func Test_isSubset(t *testing.T) {
+func Test_isOrderedSubset(t *testing.T) {
 	type args struct {
 		first  *callstack
 		second *callstack
@@ -215,8 +215,8 @@ func Test_isSubset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := isSubset(tt.args.first, tt.args.second); got != tt.want {
-				t.Errorf("isSubset() = %v, want %v", got, tt.want)
+			if got := isOrderedSubset(tt.args.first, tt.args.second); got != tt.want {
+				t.Errorf("isOrderedSubset() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -427,6 +427,42 @@ func TestAggregateSubsets(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := AggregateSubsets(tt.args.goroutines, tt.args.allStacks); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("AggregateSubsets() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkSequence(t *testing.T) {
+	type args struct {
+		a []string
+		b []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Check if subset in sequence returns true.",
+			args: args{
+				a: []string{"a", "b", "c", "d"},
+				b: []string{"a", "b", "c", "d", "e"},
+			},
+			want: true,
+		},
+		{
+			name: "Check if subset out of sequence returns false.",
+			args: args{
+				a: []string{"a", "b", "c", "d"},
+				b: []string{"a", "b", "c", "e", "d"},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkSequence(tt.args.a, tt.args.b); got != tt.want {
+				t.Errorf("checkSequence() = %v, want %v", got, tt.want)
 			}
 		})
 	}
