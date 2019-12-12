@@ -175,3 +175,295 @@ func compareBuckets(t *testing.T, expected, actual []*Bucket) {
 		}
 	}
 }
+
+func Test_isOrderedSubset(t *testing.T) {
+	type args struct {
+		first  *callstack
+		second *callstack
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Test if first is subset of second.",
+			args: args{
+				first: &callstack{"a", "aa", "aaa"},
+				second: &callstack{"a", "aa", "aaa", "aaaa"},
+			},
+			want: true,
+		},
+		{
+			name: "Test equal.",
+			args: args{
+				first: &callstack{"a", "aa", "aaa"},
+				second: &callstack{"a", "aa", "aaa"},
+			},
+			want: true,
+		},
+		{
+			name: "Test if not a subset.",
+			args: args{
+				first: &callstack{"a"},
+				second: &callstack{"aa", "aaa"},
+			},
+			want: false,
+		},
+
+
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := isOrderedSubset(tt.args.first, tt.args.second); got != tt.want {
+				t.Errorf("isOrderedSubset() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkSubset(t *testing.T) {
+	type args struct {
+		fullStacks []*callstack
+		curstack   callstack
+	}
+	tests := []struct {
+		name string
+		args args
+		want []*callstack
+	}{
+		{
+			name: "Test if same stack",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+				curstack:callstack{"a", "b"},
+			},
+			want: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+		},
+		{
+			name: "Test if incoming stack is already present in the fullstacks",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f", "e"}},
+				curstack:callstack{"d", "f"},
+			},
+			want: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f", "e"}},
+		},
+		{
+			name: "Test if incoming stack's subsets are present in the fullstacks",
+			args: args{
+				fullStacks: []*callstack{&callstack{"a", "b"}, &callstack{"d", "f"}},
+				curstack:callstack{"a", "b", "c"},
+			},
+			want: []*callstack{&callstack{"d", "f"}, &callstack{"a", "b", "c"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := checkSubset(tt.args.fullStacks, tt.args.curstack)
+			if len(got) != len(tt.want) {
+				t.Errorf("Got: %v, Want: %v\n", got, tt.want)
+			}
+			for idx, result := range got {
+				if !reflect.DeepEqual(*result, *tt.want[idx]) {
+					t.Errorf("checkSubset() = %v, want %v", got, tt.want)
+				}
+			}
+		})
+	}
+}
+
+func TestAggregateSubsets(t *testing.T) {
+	type args struct {
+		goroutines []*Goroutine
+		allStacks  Callstacks
+	}
+	tests := []struct {
+		name string
+		args args
+		want Callstacks
+	}{
+		{
+			name: "Test empty set queue initialization.",
+			args: args{
+				goroutines: []*Goroutine{
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "main.main",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "init.init",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+				},
+				allStacks: nil,
+			},
+			want: Callstacks{
+				&callstack{
+					"main.main",
+					"init.init",
+				},
+			},
+		},
+		{
+			name: "Test multiple goroutines with different functions.",
+			args: args{
+				goroutines: []*Goroutine{
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "main.main",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "init.init",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+					&Goroutine{
+						Signature: Signature{
+							State:     "",
+							CreatedBy: Call{},
+							SleepMin:  0,
+							SleepMax:  0,
+							Stack:     Stack{
+								Calls:  []Call{
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "a.b",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+									{
+										SrcPath:      "",
+										LocalSrcPath: "",
+										Line:         0,
+										Func:         Func{
+											Raw: "c.d",
+										},
+										Args:         Args{},
+										IsStdlib:     false,
+									},
+								},
+								Elided: false,
+							},
+							Locked:    false,
+						},
+						ID:        0,
+						First:     false,
+					},
+				},
+				allStacks: nil,
+			},
+			want: Callstacks{
+				&callstack{
+					"main.main",
+					"init.init",
+				},
+				&callstack{
+					"a.b",
+					"c.d",
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := AggregateSubsets(tt.args.goroutines, tt.args.allStacks); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AggregateSubsets() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_checkSequence(t *testing.T) {
+	type args struct {
+		a []string
+		b []string
+	}
+	tests := []struct {
+		name string
+		args args
+		want bool
+	}{
+		{
+			name: "Check if subset in sequence returns true.",
+			args: args{
+				a: []string{"a", "b", "c", "d"},
+				b: []string{"a", "b", "c", "d", "e"},
+			},
+			want: true,
+		},
+		{
+			name: "Check if subset out of sequence returns false.",
+			args: args{
+				a: []string{"a", "b", "c", "d"},
+				b: []string{"a", "b", "c", "e", "d"},
+			},
+			want: false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkSequence(tt.args.a, tt.args.b); got != tt.want {
+				t.Errorf("checkSequence() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

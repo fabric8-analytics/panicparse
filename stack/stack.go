@@ -83,8 +83,8 @@ func (f *Func) IsExported() bool {
 
 // Arg is an argument on a Call.
 type Arg struct {
-	Value uint64 // Value is the raw value as found in the stack trace
-	Name  string // Name is a pseudo name given to the argument
+	Value uint64 `json:"Value"`// Value is the raw value as found in the stack trace
+	Name  string `json:"Name"`// Name is a pseudo name given to the argument
 }
 
 // IsPtr returns true if we guess it's a pointer. It's only a guess, it can be
@@ -106,9 +106,9 @@ func (a *Arg) String() string {
 
 // Args is a series of function call arguments.
 type Args struct {
-	Values    []Arg    // Values is the arguments as shown on the stack trace. They are mangled via simplification.
-	Processed []string // Processed is the arguments generated from processing the source files. It can have a length lower than Values.
-	Elided    bool     // If set, it means there was a trailing ", ..."
+	Values    []Arg   `json:"Values"` // Values is the arguments as shown on the stack trace. They are mangled via simplification.
+	Processed []string `json:"Processed"`// Processed is the arguments generated from processing the source files. It can have a length lower than Values.
+	Elided    bool     `json:"Elided"`// If set, it means there was a trailing ", ..."
 }
 
 func (a *Args) String() string {
@@ -186,12 +186,12 @@ func (a *Args) merge(r *Args) Args {
 
 // Call is an item in the stack trace.
 type Call struct {
-	SrcPath      string // Full path name of the source file as seen in the trace
-	LocalSrcPath string // Full path name of the source file as seen in the host.
-	Line         int    // Line number
-	Func         Func   // Fully qualified function name (encoded).
-	Args         Args   // Call arguments
-	IsStdlib     bool   // true if it is a Go standard library function. This includes the 'go test' generated main executable.
+	SrcPath      string `json:"SrcPath"`// Full path name of the source file as seen in the trace
+	LocalSrcPath string `json:"LocalSrcPath"`// Full path name of the source file as seen in the host.
+	Line         int    `json:"Line"`// Line number
+	Func         Func   `json:"Func"`// Fully qualified function name (encoded).
+	Args         Args   `json:"Args"`// Call arguments
+	IsStdlib     bool   `json:"IsStdlib"`// true if it is a Go standard library function. This includes the 'go test' generated main executable.
 }
 
 // equal returns true only if both calls are exactly equal.
@@ -271,8 +271,8 @@ func (c *Call) updateLocations(goroot, localgoroot string, gopaths map[string]st
 
 // Stack is a call stack.
 type Stack struct {
-	Calls  []Call // Call stack. First is original function, last is leaf function.
-	Elided bool   // Happens when there's >100 items in Stack, currently hardcoded in package runtime.
+	Calls  []Call `json:"Calls"`// Call stack. First is original function, last is leaf function.
+	Elided bool   `json:"Elided"`// Happens when there's >100 items in Stack, currently hardcoded in package runtime.
 }
 
 // equal returns true on if both call stacks are exactly equal.
@@ -405,12 +405,12 @@ type Signature struct {
 	// Scan states:
 	//    - scan, scanrunnable, scanrunning, scansyscall, scanwaiting, scandead,
 	//      scanenqueue
-	State     string
-	CreatedBy Call // Which other goroutine which created this one.
-	SleepMin  int  // Wait time in minutes, if applicable.
-	SleepMax  int  // Wait time in minutes, if applicable.
-	Stack     Stack
-	Locked    bool // Locked to an OS thread.
+	State     string `json:"State"`
+	CreatedBy Call `json:"CreatedBy"`// Which other goroutine which created this one.
+	SleepMin  int  `json:"SleepMin"`// Wait time in minutes, if applicable.
+	SleepMax  int  `json:"SleepMax"`// Wait time in minutes, if applicable.
+	Stack     Stack `json:"Stack"`
+	Locked    bool `json:"Locked"`// Locked to an OS thread.
 }
 
 // equal returns true only if both signatures are exactly equal.
@@ -516,9 +516,9 @@ func (s *Signature) updateLocations(goroot, localgoroot string, gopaths map[stri
 
 // Goroutine represents the state of one goroutine, including the stack trace.
 type Goroutine struct {
-	Signature      // It's stack trace, internal bits, state, which call site created it, etc.
-	ID        int  // Goroutine ID.
-	First     bool // First is the goroutine first printed, normally the one that crashed.
+	Signature  // It's stack trace, internal bits, state, which call site created it, etc.
+	ID        int  `json:"ID"`// Goroutine ID.
+	First     bool `json:"First"`// First is the goroutine first printed, normally the one that crashed.
 }
 
 // Private stuff.
